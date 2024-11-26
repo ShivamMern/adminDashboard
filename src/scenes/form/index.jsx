@@ -1,15 +1,31 @@
-import { Box, Button, TextField } from "@mui/material";
+import { Box, Button, TextField, MenuItem } from "@mui/material";
 import { Formik } from "formik";
 import * as yup from "yup";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import Header from "../../components/Header";
+import { useDispatch, useSelector } from "react-redux";
+import { createUser } from "../../features/users/userSlice";
+import { toast } from "react-toastify";
+import { useEffect } from "react";
+import { fetchRoles } from "../../features/users/rolesService";
 
 const Form = () => {
   const isNonMobile = useMediaQuery("(min-width:600px)");
-
-  const handleFormSubmit = (values) => {
-    console.log(values);
+  const dispatch = useDispatch();
+  const { roles, loading, error } = useSelector((state) => state.roles);
+  useEffect(() => {
+    dispatch(fetchRoles());
+  }, [dispatch]);
+  const handleFormSubmit = async (values ,{ resetForm }) => {
+    try {
+      const response = await dispatch(createUser(values));
+      toast.success("User created successfully!");
+      resetForm();
+    } catch (error) {
+      toast.error("Failed to create user.");
+    }
   };
+  // const roles = ["Admin", "Clerk", "Manager", "User", "Guest"];
 
   return (
     <Box m="20px">
@@ -27,6 +43,7 @@ const Form = () => {
           handleBlur,
           handleChange,
           handleSubmit,
+          resetForm,
         }) => (
           <form onSubmit={handleSubmit}>
             <Box
@@ -34,8 +51,10 @@ const Form = () => {
               gap="30px"
               gridTemplateColumns="repeat(4, minmax(0, 1fr))"
               sx={{
+              
                 "& > div": { gridColumn: isNonMobile ? undefined : "span 4" },
               }}
+             
             >
               <TextField
                 fullWidth
@@ -76,6 +95,52 @@ const Form = () => {
                 helperText={touched.email && errors.email}
                 sx={{ gridColumn: "span 4" }}
               />
+
+              <TextField
+                fullWidth
+                variant="filled"
+                type="number"
+                label="Age"
+                onBlur={handleBlur}
+                onChange={handleChange}
+                value={values.age}
+                name="age"
+                error={!!touched.age && !!errors.age}
+                helperText={touched.age && errors.age}
+                sx={{
+                  gridColumn: "span 2",
+                  "& input[type=number]": {
+                    MozAppearance: "textfield",
+                  },
+                  "& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button":
+                    {
+                      WebkitAppearance: "none",
+                      margin: 0,
+                    },
+                }}
+              />
+              <TextField
+                fullWidth
+                variant="filled"
+                select
+                label="Role"
+                onBlur={handleBlur}
+                onChange={handleChange}
+                value={values.role} // Assumed values.role holds the selected role's id or name
+                name="role"
+                error={!!touched.role && !!errors.role}
+                helperText={touched.role && errors.role}
+                sx={{ gridColumn: "span 2" }}
+              >
+                {roles.map((role) => (
+                  <MenuItem key={role.id} value={role.id}>
+                    {" "}
+                    {/* Use role.id as value */}
+                    {role.role} {/* Display the role name */}
+                  </MenuItem>
+                ))}
+              </TextField>
+
               <TextField
                 fullWidth
                 variant="filled"
@@ -116,7 +181,15 @@ const Form = () => {
                 sx={{ gridColumn: "span 4" }}
               />
             </Box>
-            <Box display="flex" justifyContent="end" mt="20px">
+            <Box display="flex" justifyContent="end" mt="20px" gap="10px">
+              <Button
+                type="button"
+                color="primary"
+                variant="contained"
+                onClick={() => resetForm()}
+              >
+                Clear
+              </Button>
               <Button type="submit" color="secondary" variant="contained">
                 Create New User
               </Button>
@@ -141,6 +214,11 @@ const checkoutSchema = yup.object().shape({
     .required("required"),
   address1: yup.string().required("required"),
   address2: yup.string().required("required"),
+  age: yup
+    .number()
+    .min(18, "Must be at least 18 years old")
+    .required("required"),
+  role: yup.string().required("required"),
 });
 const initialValues = {
   firstName: "",
@@ -149,6 +227,9 @@ const initialValues = {
   contact: "",
   address1: "",
   address2: "",
+  age: "",
+  role: "",
+  status:"active"
 };
 
 export default Form;

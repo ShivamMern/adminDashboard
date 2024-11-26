@@ -15,10 +15,19 @@ import Geography from "./scenes/geography";
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import { ColorModeContext, useMode } from "./theme";
 import Calendar from "./scenes/calendar/calendar";
-
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import Roles from "./scenes/Authorization/Roles";
 function App() {
   const [theme, colorMode] = useMode();
   const [isSidebar, setIsSidebar] = useState(true);
+
+  const routesConfig = [
+    { path: "/", element: <Dashboard /> },
+    { path: "/team", element: <Team /> },
+    { path: "/form", element: <Form /> },
+    { path: "/roles", element: <Roles /> },
+  ];
 
   return (
     <ColorModeContext.Provider value={colorMode}>
@@ -29,20 +38,13 @@ function App() {
           <main className="content">
             <Topbar setIsSidebar={setIsSidebar} />
             <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/team" element={<Team />} />
-              <Route path="/contacts" element={<Contacts />} />
-              <Route path="/invoices" element={<Invoices />} />
-              <Route path="/form" element={<Form />} />
-              <Route path="/bar" element={<Bar />} />
-              <Route path="/pie" element={<Pie />} />
-              <Route path="/line" element={<Line />} />
-              <Route path="/faq" element={<FAQ />} />
-              <Route path="/calendar" element={<Calendar />} />
-              <Route path="/geography" element={<Geography />} />
+              {routesConfig.map(({ path, element }, index) => (
+                <Route key={index} path={path} element={element} />
+              ))}
             </Routes>
           </main>
         </div>
+        <ToastContainer />
       </ThemeProvider>
     </ColorModeContext.Provider>
   );
